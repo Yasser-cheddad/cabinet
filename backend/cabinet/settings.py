@@ -32,7 +32,7 @@ IS_HEROKU = os.getenv('IS_HEROKU', False)
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
 # Configure allowed hosts
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = ['cabinet-medicale-yasser-42ffd0135d5d.herokuapp.com', 'localhost', '127.0.0.1']
 
 # Clinic information for notifications
 CLINIC_ADDRESS = os.getenv('CLINIC_ADDRESS', '123 Medical Street, City')

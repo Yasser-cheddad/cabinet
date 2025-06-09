@@ -35,6 +35,7 @@ django-storages==1.14.2
 
 # API Integrations
 requests==2.31.0
+django-rest-framework-nested==1.0.0
 
 # Calendar Integration
 icalendar==6.3.1
