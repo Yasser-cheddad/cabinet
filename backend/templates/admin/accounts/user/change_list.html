@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+    {% if special_roles_url %}
+    <li>
+        <a href="{{ special_roles_url }}" class="addlink">
+            {% trans 'Manage Special Roles' %}
+        </a>
+    </li>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

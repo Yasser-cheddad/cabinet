@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Cabinet Test</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            color: #2563eb;
+            margin-top: 0;
+        }
+        p {
+            line-height: 1.6;
+        }
+        .button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 1rem;
+        }
+        .button.green {
+            background-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Medical Cabinet Test Page</h1>
+        <p>This is a simple HTML test page to verify that your browser can display content correctly.</p>
+        <p>If you can see this page, your browser is working properly, and we can focus on fixing the React application.</p>
+        
+        <button class="button" onclick="alert('Test button clicked!')">Test Button</button>
+        <button class="button green" onclick="console.log('Console log test')">Log to Console</button>
+    </div>
+</body>
+</html>

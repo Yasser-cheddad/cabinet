@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1 {
+    @apply text-2xl font-bold;
+  }
+  
+  h2 {
+    @apply text-xl font-semibold;
+  }
+  
+  h3 {
+    @apply text-lg font-medium;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded font-medium transition duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-600 text-white hover:bg-secondary-700;
+  }
+  
+  .btn-outline {
+    @apply border border-gray-300 hover:bg-gray-100;
+  }
+  
+  .input {
+    @apply w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-400;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-card p-4;
+  }
+  
+  .dashboard-layout {
+    @apply flex min-h-screen;
+  }
+  
+  .sidebar {
+    @apply w-64 bg-white shadow-md fixed h-full;
+  }
+  
+  .main-content {
+    @apply flex-1 ml-64 p-6;
+  }
+}

@@ -1,0 +1,65 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style type="text/css">
+  .notifications-container {
+    margin-bottom: 20px;
+  }
+  .notification {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+  }
+  .notification-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+  }
+  .notification-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+  }
+  .notification-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+  }
+  .notification p {
+    margin: 0;
+  }
+  .notification p + p {
+    margin-top: 10px;
+  }
+  .action-button {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #417690;
+    color: white;
+    text-decoration: none;
+    border-radius: 3px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  {% if notifications %}
+    <div class="notifications-container">
+      {% for notification in notifications %}
+        <div class="notification {% if notification.level %}notification-{{ notification.level }}{% endif %}">
+          <p>{{ notification.message }}</p>
+          {% if notification.url %}
+            <p>
+              <a href="{{ notification.url }}" class="action-button">
+                {% trans 'Take Action' %}
+              </a>
+            </p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

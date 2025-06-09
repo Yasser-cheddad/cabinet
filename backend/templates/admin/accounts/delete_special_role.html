@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .warning {
+      color: #ba2121;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .user-info {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .actions {
+      margin-top: 20px;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px 15px;
+      background-color: #417690;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-right: 10px;
+      border: none;
+      cursor: pointer;
+    }
+    .button.danger {
+      background-color: #ba2121;
+    }
+    .button.cancel {
+      background-color: #888;
+    }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:accounts_user_changelist' %}">Users</a>
+  &rsaquo; {% trans 'Delete' %} {{ role }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1>{% trans 'Delete' %} {{ role }} {% trans 'Account' %}</h1>
+  
+  <div class="warning">
+    {% trans 'Warning: This action will permanently delete this account and cannot be undone!' %}
+  </div>
+  
+  <div class="user-info">
+    <h2>{{ user_to_delete.get_full_name }}</h2>
+    <p><strong>{% trans 'Email:' %}</strong> {{ user_to_delete.email }}</p>
+    <p><strong>{% trans 'Role:' %}</strong> {{ role }}</p>
+    <p><strong>{% trans 'Date Joined:' %}</strong> {{ user_to_delete.date_joined|date:"F j, Y" }}</p>
+  </div>
+  
+  <p>{% trans 'Are you sure you want to delete this account?' %}</p>
+  
+  <div class="actions">
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="button danger">{% trans 'Yes, Delete' %}</button>
+      <a href="{% url 'admin:accounts_user_changelist' %}" class="button cancel">{% trans 'No, Cancel' %}</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

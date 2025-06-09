@@ -1,0 +1,122 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .role-card {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .role-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #417690;
+    }
+    .user-info {
+      margin-bottom: 10px;
+    }
+    .action-buttons {
+      margin-top: 15px;
+    }
+    .button {
+      display: inline-block;
+      padding: 8px 15px;
+      background-color: #417690;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+    .button.danger {
+      background-color: #ba2121;
+    }
+    .patient-list {
+      margin-top: 20px;
+    }
+    .patient-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .patient-item:hover {
+      background-color: #f5f5f5;
+    }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:accounts_user_changelist' %}">Users</a>
+  &rsaquo; {% trans 'Manage Special Roles' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <h1>{% trans 'Manage Special Roles' %}</h1>
+  
+  <div class="role-card">
+    <div class="role-title">{% trans 'Doctor' %}</div>
+    {% if doctor %}
+      <div class="user-info">
+        <strong>{% trans 'Current Doctor:' %}</strong> {{ doctor.get_full_name }} ({{ doctor.email }})
+      </div>
+      <div class="action-buttons">
+        <a href="{% url 'admin:accounts_user_change' doctor.id %}" class="button">{% trans 'Edit' %}</a>
+        <a href="{% url 'admin:change-user-role' doctor.id 'patient' %}" class="button danger">{% trans 'Change to Patient' %}</a>
+        <a href="{% url 'admin:delete-special-role' doctor.id %}" class="button danger">{% trans 'Delete Doctor' %}</a>
+      </div>
+    {% else %}
+      <p>{% trans 'No doctor assigned yet.' %}</p>
+      <p>{% trans 'Select a patient from the list below to make them a doctor.' %}</p>
+    {% endif %}
+  </div>
+  
+  <div class="role-card">
+    <div class="role-title">{% trans 'Secretary' %}</div>
+    {% if secretary %}
+      <div class="user-info">
+        <strong>{% trans 'Current Secretary:' %}</strong> {{ secretary.get_full_name }} ({{ secretary.email }})
+      </div>
+      <div class="action-buttons">
+        <a href="{% url 'admin:accounts_user_change' secretary.id %}" class="button">{% trans 'Edit' %}</a>
+        <a href="{% url 'admin:change-user-role' secretary.id 'patient' %}" class="button danger">{% trans 'Change to Patient' %}</a>
+        <a href="{% url 'admin:delete-special-role' secretary.id %}" class="button danger">{% trans 'Delete Secretary' %}</a>
+      </div>
+    {% else %}
+      <p>{% trans 'No secretary assigned yet.' %}</p>
+      <p>{% trans 'Select a patient from the list below to make them a secretary.' %}</p>
+    {% endif %}
+  </div>
+  
+  <div class="role-card">
+    <div class="role-title">{% trans 'Patients' %}</div>
+    {% if patients %}
+      <div class="patient-list">
+        {% for patient in patients %}
+          <div class="patient-item">
+            <strong>{{ patient.get_full_name }}</strong> ({{ patient.email }})
+            <div class="action-buttons">
+              <a href="{% url 'admin:accounts_user_change' patient.id %}" class="button">{% trans 'Edit' %}</a>
+              {% if not doctor %}
+                <a href="{% url 'admin:change-user-role' patient.id 'doctor' %}" class="button">{% trans 'Make Doctor' %}</a>
+              {% endif %}
+              {% if not secretary %}
+                <a href="{% url 'admin:change-user-role' patient.id 'secretary' %}" class="button">{% trans 'Make Secretary' %}</a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>{% trans 'No patients available.' %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
