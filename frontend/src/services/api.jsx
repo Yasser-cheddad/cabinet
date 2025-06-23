@@ -1,13 +1,10 @@
 import axios from 'axios';
 
 // Configure base URL for all environments
-const baseURL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.MODE === 'production'
-    ? 'https://cabinet-medicale-yasser-42ffd0135d5d.herokuapp.com'
-    : 'http://localhost:8000');
+const API_BASE_URL = 'https://cabinet-medicale-yasser.herokuapp.com';
 
 const api = axios.create({
-  baseURL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -39,7 +36,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw error;
         
-        const { data } = await axios.post(`${baseURL}/accounts/token/refresh/`, 
+        const { data } = await axios.post(`${API_BASE_URL}/accounts/token/refresh/`, 
           { refresh: refreshToken },
           { headers: { 'Content-Type': 'application/json' } }
         );
