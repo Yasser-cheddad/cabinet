@@ -13,6 +13,7 @@ from .serializers import (
 from accounts.permissions import IsDoctor, IsPatient, CanManageMedicalRecords
 
 class MedicalRecordViewSet(viewsets.ModelViewSet):
+    queryset = MedicalRecord.objects.all()
     serializer_class = MedicalRecordSerializer
     permission_classes = [CanManageMedicalRecords]
 
@@ -38,6 +39,7 @@ class MedicalRecordViewSet(viewsets.ModelViewSet):
         })
 
 class MedicalNoteViewSet(viewsets.ModelViewSet):
+    queryset = MedicalNote.objects.all()
     serializer_class = MedicalNoteSerializer
     permission_classes = [IsDoctor]
 
@@ -53,6 +55,7 @@ class MedicalNoteViewSet(viewsets.ModelViewSet):
         )
 
 class PrescriptionViewSet(viewsets.ModelViewSet):
+    queryset = Prescription.objects.all()
     serializer_class = PrescriptionSerializer
     permission_classes = [IsDoctor]
 
@@ -65,6 +68,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         serializer.save(medical_note_id=self.kwargs.get('medical_note_pk'))
 
 class MedicalFileViewSet(viewsets.ModelViewSet):
+    queryset = MedicalFile.objects.all()
     serializer_class = MedicalFileSerializer
     permission_classes = [CanManageMedicalRecords]
     parser_classes = (MultiPartParser, FormParser)

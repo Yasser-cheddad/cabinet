@@ -1,5 +1,5 @@
 from django.urls import path, include
-from rest_framework_nested import routers
+from rest_framework import routers
 from .views import (
     MedicalRecordViewSet,
     MedicalNoteViewSet,
@@ -10,15 +10,13 @@ from .views import (
 router = routers.SimpleRouter()
 router.register(r'records', MedicalRecordViewSet, basename='medical-record')
 
-records_router = routers.NestedSimpleRouter(router, r'records', lookup='medical_record')
-records_router.register(r'notes', MedicalNoteViewSet, basename='medical-note')
-records_router.register(r'files', MedicalFileViewSet, basename='medical-file')
-
-notes_router = routers.NestedSimpleRouter(records_router, r'notes', lookup='medical_note')
-notes_router.register(r'prescriptions', PrescriptionViewSet, basename='prescription')
-
+# Flat URL patterns instead of nested routers
 urlpatterns = [
     path('', include(router.urls)),
-    path('', include(records_router.urls)),
-    path('', include(notes_router.urls)),
+    path('records/<int:medical_record_pk>/notes/', MedicalNoteViewSet.as_view({'get': 'list', 'post': 'create'}), name='medical-note-list'),
+    path('records/<int:medical_record_pk>/notes/<int:pk>/', MedicalNoteViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='medical-note-detail'),
+    path('records/<int:medical_record_pk>/files/', MedicalFileViewSet.as_view({'get': 'list', 'post': 'create'}), name='medical-file-list'),
+    path('records/<int:medical_record_pk>/files/<int:pk>/', MedicalFileViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='medical-file-detail'),
+    path('records/<int:medical_record_pk>/notes/<int:medical_note_pk>/prescriptions/', PrescriptionViewSet.as_view({'get': 'list', 'post': 'create'}), name='prescription-list'),
+    path('records/<int:medical_record_pk>/notes/<int:medical_note_pk>/prescriptions/<int:pk>/', PrescriptionViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='prescription-detail'),
 ]
