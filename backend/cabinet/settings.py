@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from pathlib import Path
 from datetime import timedelta
-
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -90,18 +90,20 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
-# CORS settings
-if ENVIRONMENT == 'production':
-    CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'https://cabinetmedicale.com').split(',')
-    CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://cabinetmedicale.com').split(',')
-else:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:5173",  # Vite's default development port
-        "http://127.0.0.1:5173",
-    ]
-    CORS_ALLOW_CREDENTIALS = True
+# CORS settingsdj_database_url.config(conn_max_age=600, ssl_require=True)
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS', 
+    default='http://localhost:3000,http://127.0.0.1:3000',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
+CORS_ALLOW_CREDENTIALS = True  # For both environments
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -139,13 +141,14 @@ WSGI_APPLICATION = 'cabinet.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Configure database based on environment
-if IS_HEROKU:
-    # Use Heroku's DATABASE_URL environment variable
+# Database configuration
+# Priority: DATABASE_URL (Heroku)  > IS_HEROKU flag > local env vars
+if os.getenv('DATABASE_URL') or IS_HEROKU:
     DATABASES = {
         'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
     }
 else:
-    # Local database configuration
+    # Local PostgreSQL settings (remain unchanged for localhost)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
