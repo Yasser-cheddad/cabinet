@@ -7,7 +7,7 @@ from .views import (
     MedicalFileViewSet
 )
 
-router = routers.DefaultRouter()
+router = routers.SimpleRouter()
 router.register(r'records', MedicalRecordViewSet, basename='medical-record')
 
 records_router = routers.NestedSimpleRouter(router, r'records', lookup='medical_record')

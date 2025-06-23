@@ -1,16 +1,20 @@
 import axios from 'axios';
 
-// Base URL for API requests - ensure it doesn't have a trailing slash
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+// Configure base URL for all environments
+const baseURL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.MODE === 'production'
+    ? 'https://cabinet-medicale-yasser-42ffd0135d5d.herokuapp.com'
+    : 'http://localhost:8000');
 
 const api = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true  // Important for CORS
 });
 
-// Add request interceptor to set Authorization header
+// Request interceptor for auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -19,72 +23,53 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add interceptor to handle token refresh
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
-    // If error is 401 and we haven't tried to refresh token yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
-        // Get refresh token from local storage
         const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) throw error;
         
-        if (!refreshToken) {
-          // No refresh token available, redirect to login
-          window.location.href = '/login';
-          return Promise.reject(error);
-        }
-        
-        // Try to get a new token
-        try {
-          const response = await axios.post(`${baseURL}/accounts/token/refresh/`, {
-            refresh: refreshToken
-          }, {
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (response.data.access) {
-            // Save the new access token
-            localStorage.setItem('accessToken', response.data.access);
-            
-            // Update the authorization header
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-            originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
-            
-            // Retry the original request
-            return api(originalRequest);
-          }
-        } catch (refreshError) {
-          // If refresh token is expired or invalid, redirect to login
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        }
+        const { data } = await axios.post(`${baseURL}/accounts/token/refresh/`, 
+          { refresh: refreshToken },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        localStorage.setItem('accessToken', data.access);
+        originalRequest.headers.Authorization = `Bearer ${data.access}`;
+        return api(originalRequest);
       } catch (err) {
-        console.error('Error refreshing token:', err);
-        // Redirect to login on refresh token failure
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
-        return Promise.reject(error);
+        return Promise.reject(err);
       }
     }
-    
     return Promise.reject(error);
   }
 );
+
+// Test connection function
+export const testBackendConnection = () => {
+  return api.get('/api/test')
+    .then(response => {
+      console.log('Backend connection successful:', response.data);
+      return response.data;
+    })
+    .catch(error => {
+      console.error('Backend connection failed:', error);
+      throw error;
+    });
+};
 
 // Service for Patient management
 export const patientService = {
