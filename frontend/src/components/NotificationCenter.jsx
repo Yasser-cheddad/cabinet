@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 const NotificationCenter = () => {
   const { user } = useAuth();
@@ -9,9 +10,20 @@ const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Track connection errors to avoid excessive polling when backend is down
   const [connectionError, setConnectionError] = useState(false);
+
+  // WebSocket connection
+  const { connectionStatus } = useNotifications(handleWebSocketNotification);
+
+  function handleWebSocketNotification(data) {
+    setNotifications(prev => [{
+      ...data,
+      id: Date.now(), // Temporary ID
+      createdAt: new Date().toISOString(),
+      is_read: false
+    }, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  }
 
   useEffect(() => {
     // Only fetch if user is logged in
@@ -210,6 +222,11 @@ const NotificationCenter = () => {
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
             {unreadCount}
+          </span>
+        )}
+        {connectionStatus !== 'connected' && (
+          <span className="absolute top-0 right-8 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-gray-500 transform translate-x-1/2 -translate-y-1/2 rounded-full">
+            {connectionStatus}
           </span>
         )}
       </button>

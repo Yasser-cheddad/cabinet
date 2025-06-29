@@ -6,6 +6,10 @@ import logging
 import os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
+from django.core.exceptions import ObjectDoesNotExist
+from accounts.models import User
+from .models import Notification
+from .utils import send_notification
 
 logger = logging.getLogger(__name__)
 
@@ -240,3 +244,32 @@ def send_appointment_reminder(appointment):
         'email': email_status,
         'sms': sms_status
     }
+
+def send_notification_service(recipient_id, message, notification_type):
+    """
+    Service to handle the creation and sending of a custom notification.
+    """
+    try:
+        recipient = User.objects.get(id=recipient_id)
+    except ObjectDoesNotExist:
+        raise ValueError("Recipient not found.")
+
+    # Create the notification instance
+    notification = Notification.objects.create(
+        user=recipient,
+        title="New Message from Staff",
+        message=message,
+        notification_type='message' # Or derive from a parameter if needed
+    )
+
+    # Use the existing utility to send the notification
+    send_notification(
+        user_id=recipient.id,
+        title=notification.title,
+        message=notification.message,
+        notification_type=notification.notification_type,
+        # Pass notification_id to be used in WebSocket message
+        extra_data={'notification_id': notification.id}
+    )
+
+    return notification

@@ -5,6 +5,7 @@ import { useAuth } from './context/AuthContext';
 // Layout components
 import DashboardLayout from './components/DashboardLayout';
 import AuthLayout from './components/AuthLayout';
+import NotificationCenter from './components/NotificationCenter';
 
 // Auth pages
 import Login from './pages/Login';
@@ -34,10 +35,12 @@ import PrescriptionDetail from './pages/PrescriptionDetail';
 import Profile from './pages/Profile';
 import Chatbot from './pages/Chatbot';
 import NotFound from './pages/NotFound';
+import ScheduleManagement from './pages/ScheduleManagement';
+import SendNotification from './pages/SendNotification';
 
 // Protected route wrapper
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children, roles }) => {
+  const { isAuthenticated, loading, user } = useAuth();
   
   if (loading) {
     return (
@@ -49,6 +52,10 @@ const ProtectedRoute = ({ children }) => {
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
+  }
+  
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to="/dashboard" />;
   }
   
   return children;
@@ -95,89 +102,96 @@ const GuestRoute = ({ children }) => {
 };
 
 function App() {
+  const { user } = useAuth();
   return (
-    <Routes>
-      {/* Auth routes */}
-      <Route path="/" element={<Navigate to="/dashboard" />} />
-      
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={
-          <GuestRoute>
-            <Login />
-          </GuestRoute>
-        } />
-        <Route path="/login-staff" element={
-          <GuestRoute>
-            <LoginStaff />
-          </GuestRoute>
-        } />
-        <Route path="/register" element={
-          <GuestRoute>
-            <Register />
-          </GuestRoute>
-        } />
-        <Route path="/forgot-password" element={
-          <GuestRoute>
-            <ForgotPassword />
-          </GuestRoute>
-        } />
-      </Route>
-      
-      {/* Dashboard routes */}
-      <Route element={
-        <ProtectedRoute>
-          <DashboardLayout />
-        </ProtectedRoute>
-      }>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-        <Route path="/secretary-dashboard" element={<SecretaryDashboard />} />
-        <Route path="/medical-records/:id" element={<MedicalRecordView />} />
+    <div className="app-container">
+      <NotificationCenter />
+      <Routes>
+        {/* Auth routes */}
+        <Route path="/" element={<Navigate to="/dashboard" />} />
         
-        {/* Patient routes */}
-        <Route path="/patients" element={<Patients />} />
-        <Route path="/patients/new" element={<PatientForm />} />
-        <Route path="/patients/:id" element={<PatientDetail />} />
-        <Route path="/patients/:id/edit" element={<PatientForm />} />
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          } />
+          <Route path="/login-staff" element={
+            <GuestRoute>
+              <LoginStaff />
+            </GuestRoute>
+          } />
+          <Route path="/register" element={
+            <GuestRoute>
+              <Register />
+            </GuestRoute>
+          } />
+          <Route path="/forgot-password" element={
+            <GuestRoute>
+              <ForgotPassword />
+            </GuestRoute>
+          } />
+        </Route>
         
-        {/* Appointment routes */}
-        <Route path="/appointments" element={<Appointments />} />
-        <Route path="/appointments/new" element={<AppointmentForm />} />
-        <Route path="/appointments/:id" element={<AppointmentDetail />} />
-        <Route path="/appointments/edit/:id" element={<AppointmentEdit />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/doctor-availability" element={
-          <RoleProtectedRoute roles={['doctor']}>
-            <DoctorAvailability />
-          </RoleProtectedRoute>
-        } />
+        {/* Dashboard routes */}
+        <Route element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+          <Route path="/secretary-dashboard" element={<SecretaryDashboard />} />
+          <Route path="/medical-records/:id" element={<ProtectedRoute roles={['doctor', 'patient']}><MedicalRecordView /></ProtectedRoute>} />
+          
+          {/* Patient routes */}
+          <Route path="/patients" element={<Patients />} />
+          <Route path="/patients/new" element={<PatientForm />} />
+          <Route path="/patients/:id" element={<PatientDetail />} />
+          <Route path="/patients/:id/edit" element={<PatientForm />} />
+          
+          {/* Appointment routes */}
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/appointments/new" element={<AppointmentForm />} />
+          <Route path="/appointments/:id" element={<AppointmentDetail />} />
+          <Route path="/appointments/edit/:id" element={<AppointmentEdit />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/doctor-availability" element={
+            <RoleProtectedRoute roles={['doctor']}>
+              <DoctorAvailability />
+            </RoleProtectedRoute>
+          } />
+          
+          {/* Prescription routes */}
+          <Route path="/prescriptions" element={<Prescriptions />} />
+          {/* Only allow doctors and staff to create prescriptions */}
+          <Route path="/prescriptions/new" element={
+            <RoleProtectedRoute roles={['doctor', 'admin', 'staff']}>
+              <PrescriptionForm />
+            </RoleProtectedRoute>
+          } />
+          <Route path="/prescriptions/:id" element={<PrescriptionDetail />} />
+          {/* Only allow doctors and staff to edit prescriptions */}
+          <Route path="/prescriptions/:id/edit" element={
+            <RoleProtectedRoute roles={['doctor', 'admin', 'staff']}>
+              <PrescriptionForm />
+            </RoleProtectedRoute>
+          } />
+          
+          {/* User routes */}
+          <Route path="/profile" element={<ProtectedRoute roles={['patient']}><Profile /></ProtectedRoute>} />
+          <Route path="/chatbot" element={<ProtectedRoute roles={['patient']}><Chatbot /></ProtectedRoute>} />
+          <Route path="/schedule-management" element={<ProtectedRoute roles={['secretary']}><ScheduleManagement /></ProtectedRoute>} />
+          <Route path="/send-notification" element={<ProtectedRoute roles={['doctor', 'secretary']}><SendNotification /></ProtectedRoute>} />
+          
+          {/* Doctor Routes */}
+          {/* Add doctor-specific routes here */}
+        </Route>
         
-        {/* Prescription routes */}
-        <Route path="/prescriptions" element={<Prescriptions />} />
-        {/* Only allow doctors and staff to create prescriptions */}
-        <Route path="/prescriptions/new" element={
-          <RoleProtectedRoute roles={['doctor', 'admin', 'staff']}>
-            <PrescriptionForm />
-          </RoleProtectedRoute>
-        } />
-        <Route path="/prescriptions/:id" element={<PrescriptionDetail />} />
-        {/* Only allow doctors and staff to edit prescriptions */}
-        <Route path="/prescriptions/:id/edit" element={
-          <RoleProtectedRoute roles={['doctor', 'admin', 'staff']}>
-            <PrescriptionForm />
-          </RoleProtectedRoute>
-        } />
-        
-        {/* User routes */}
-        <Route path="/profile" element={<Profile />} />
-        
-        {/* Chatbot route */}
-        <Route path="/chatbot" element={<Chatbot />} />
-      </Route>
-      
-      {/* Not found */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* Not found */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
   );
 }
 

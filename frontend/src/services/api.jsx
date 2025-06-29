@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Configure base URL for all environments
-const API_BASE_URL = 'https://cabinet-medicale-yasser.herokuapp.com';
-
+//const API_BASE_URL = 'https://cabinet-medicale-yasser.herokuapp.com';
+const API_BASE_URL = 'http://localhost:8000/api'; 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -36,7 +36,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw error;
         
-        const { data } = await axios.post(`${API_BASE_URL}/accounts/token/refresh/`, 
+        const { data } = await axios.post(`${API_BASE_URL}accounts/token/refresh/`, 
           { refresh: refreshToken },
           { headers: { 'Content-Type': 'application/json' } }
         );
@@ -57,7 +57,7 @@ api.interceptors.response.use(
 
 // Test connection function
 export const testBackendConnection = () => {
-  return api.get('/api/test')
+  return api.get('/accounts/api/test')
     .then(response => {
       console.log('Backend connection successful:', response.data);
       return response.data;
@@ -142,16 +142,16 @@ export const patientService = {
 // Time slot service
 const timeSlotService = {
   getAvailable: (params) => {
-    // Build query string from params
-    const queryParams = new URLSearchParams();
-    if (params.start_date) queryParams.append('start_date', params.start_date);
-    if (params.end_date) queryParams.append('end_date', params.end_date);
-    if (params.doctor_id) queryParams.append('doctor_id', params.doctor_id);
-    if (params.include_unavailable !== undefined) queryParams.append('include_unavailable', params.include_unavailable);
-    
-    return api.get(`/appointments/timeslots/?${queryParams.toString()}`);
+    const queryParams = new URLSearchParams(params);
+    return api.get(`/appointments/timeslots/available/?${queryParams.toString()}`);
   },
-  
+  create: (data) => {
+    return api.post('/appointments/timeslots/', data);
+  },
+  delete: (id) => {
+    return api.delete(`/appointments/timeslots/${id}/`);
+  },
+
   // Get time slots for a specific doctor on a specific date
   getByDoctorAndDate: (doctorId, date) => {
     if (!doctorId || !date) {
@@ -189,7 +189,7 @@ export const prescriptionService = {
   getByPatientId: (patientId) => api.get(`/prescriptions/patient/${patientId}/`)
 };
 
-// Export the services
+// Service for Appointment management
 export const appointmentService = {
   getAll: () => api.get('/appointments/'),
   getById: (id) => api.get(`/appointments/${id}/`),
@@ -227,7 +227,7 @@ export const appointmentService = {
     
     // Use the appropriate endpoint based on user role
     // Make sure we're using the correct path relative to the baseURL
-    const endpoint = userRole === 'patient' ? 'appointments/create-patient/' : 'appointments/create/';
+    const endpoint = userRole === 'patient' ? '/appointments/create-patient/' : '/appointments/create/';
     console.log(`Using appointments endpoint: ${endpoint}`);
     return api.post(endpoint, transformedData);
   },
@@ -256,6 +256,11 @@ export const appointmentService = {
   getAvailableTimeSlots: (date, doctorId) => {
     return api.get(`/appointments/timeslots/?start_date=${date}&end_date=${date}&doctor_id=${doctorId}&include_unavailable=false`);
   }
+};
+
+// Service for Notification management
+export const notificationService = {
+  sendCustom: (data) => api.post('/notifications/send/', data),
 };
 
 // Export all services

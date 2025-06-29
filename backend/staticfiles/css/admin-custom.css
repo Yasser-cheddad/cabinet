@@ -1,0 +1,22 @@
+.object-tools a.button {
+    background: #417690;
+    padding: 10px 15px;
+    border-radius: 4px;
+    color: white !important;
+    font-weight: bold;
+    text-decoration: none !important;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.object-tools a.button:hover {
+    background: #205067;
+}
+
+.object-tools a.button[style*="ba2121"] {
+    background: #ba2121 !important;
+}
+
+.object-tools a.button[style*="ba2121"]:hover {
+    background: #8c1b1b !important;
+}

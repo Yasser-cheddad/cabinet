@@ -49,6 +49,7 @@ SITE_DOMAIN = os.getenv('SITE_DOMAIN', 'http://localhost:8000')
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,16 +60,17 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-    # Project apps
     'accounts',
     'appointments',
-    'notifications',
     'medical_records',
     'prescriptions',
     'chatbot',
     'medical_inventory',
-    'patients'
+    'patients',
+    'channels',       # For WebSocket support
+    'notifications',  # For WebSocket notifications
 ]
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -91,17 +93,21 @@ SIMPLE_JWT = {
 }
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
-    s.strip() for s in os.getenv(
-        'CORS_ALLOWED_ORIGINS',
-        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173'
-    ).split(',')
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "ws://localhost:3000",
+    "ws://127.0.0.1:3000",
+    "ws://localhost:8000",
+    "ws://127.0.0.1:8000"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    s.strip() for s in os.getenv(
-        'CSRF_TRUSTED_ORIGINS',
-        'http://localhost:3000,http://127.0.0.1:3000'
-    ).split(',')
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "ws://localhost:3000",
+    "ws://127.0.0.1:3000",
+    "ws://localhost:8000",
+    "ws://127.0.0.1:8000"
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # For both environments
@@ -136,7 +142,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'cabinet.wsgi.application'
-
+ASGI_APPLICATION = 'cabinet.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -144,10 +150,25 @@ WSGI_APPLICATION = 'cabinet.wsgi.application'
 # Configure database based on environment
 # Database configuration
 # Priority: DATABASE_URL (Heroku)  > IS_HEROKU flag > local env vars
-if os.getenv('DATABASE_URL') or IS_HEROKU:
+# Database configuration
+if os.getenv('DATABASE_URL'):
+    # Always use DATABASE_URL if present (Heroku)
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True
+        )
     }
+elif IS_HEROKU:
+    # Fallback for Heroku without DATABASE_URL
+   DATABASES = {
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True,
+        engine='django.db.backends.postgresql'
+    )
+}
 else:
     # Local PostgreSQL settings (remain unchanged for localhost)
     DATABASES = {
@@ -161,6 +182,15 @@ else:
         }
     }
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'CONFIG': {
+            'capacity': 1000,  # Default: 100
+            'expiry': 60,      # Default: 60
+        },
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -257,28 +287,36 @@ if ENVIRONMENT == 'production':
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
+# Jazzmin settings
+JAZZMIN_SETTINGS = {
+    'site_title': 'Medical Cabinet Admin',
+    'site_header': 'Medical Cabinet',
+    'site_brand': 'Medical Cabinet',
+    'welcome_sign': 'Welcome to Medical Cabinet Admin',
+    'show_ui_builder': True,
+    'navigation_expanded': True,
+    'actions_sticky_top': True,
+    'custom_css': 'css/admin-custom.css',
+    'related_modal_active': True
+}
+
 # Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
-            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
             'level': 'INFO',
-            'propagate': True,
+        },
+        'corsheaders': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
         },
         'appointments': {
             'handlers': ['console'],

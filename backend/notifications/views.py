@@ -7,6 +7,12 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Notification, NotificationSetting
+from .utils import send_notification
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from rest_framework import generics
+from .serializers import NotificationSerializer
+from .services import send_notification_service
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -51,6 +57,20 @@ def get_notifications(request):
         } for notification in notifications],
         'unread_count': unread_count
     }
+    
+    # Send WebSocket notification
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f'notifications_{user.id}',
+        {
+            'type': 'send_notification',
+            'data': {
+                'type': 'info',
+                'message': 'Your notifications were fetched',
+                'timestamp': str(timezone.now())
+            }
+        }
+    )
     
     return Response(data, status=status.HTTP_200_OK)
 
@@ -213,6 +233,20 @@ def create_notification(request):
         )
         notification.save()
         
+        # Send WebSocket notification
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'notifications_{target_user_id}',
+            {
+                'type': 'send_notification',
+                'data': {
+                    'type': 'info',
+                    'message': 'You have a new notification',
+                    'timestamp': str(timezone.now())
+                }
+            }
+        )
+        
         return Response({
             'success': _('Notification created successfully'),
             'id': notification.id
@@ -226,3 +260,31 @@ def create_notification(request):
         return Response({
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class NotificationListView(generics.ListAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_custom_notification(request):
+    user = request.user
+    if user.role not in ['secretary', 'doctor']:
+        return Response({'error': 'You do not have permission to send notifications.'}, status=status.HTTP_403_FORBIDDEN)
+
+    recipient_id = request.data.get('recipient_id')
+    message = request.data.get('message')
+    notification_type = request.data.get('type', 'email') # Default to email
+
+    if not all([recipient_id, message]):
+        return Response({'error': 'Recipient and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        send_notification_service(recipient_id, message, notification_type)
+        return Response({'message': 'Notification sent successfully.'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': f'Failed to send notification: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

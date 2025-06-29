@@ -1,0 +1,15 @@
+.object-tools a.button {
+    display: none !important;
+}
+
+.object-tools a.button:hover {
+    background: #205067;
+}
+
+.object-tools a.button[style*="ba2121"] {
+    background: #ba2121 !important;
+}
+
+.object-tools a.button[style*="ba2121"]:hover {
+    background: #8c1b1b !important;
+}
