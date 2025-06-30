@@ -5,15 +5,15 @@ from email.mime.multipart import MIMEMultipart
 from twilio.rest import Client
 
 # Twilio credentials
-TWILIO_ACCOUNT_SID = "AC941bf7f1f9a4b40155186adc1585bf93"
-TWILIO_AUTH_TOKEN = "f9c608fd6bf5947b7eadf847bf058877"
-TWILIO_PHONE_NUMBER = "+17542913965"
+TWILIO_ACCOUNT_SID = ""
+TWILIO_AUTH_TOKEN = ""
+TWILIO_PHONE_NUMBER = ""
 
 # Email credentials
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "cheddadyasse2002@gmail.com"
-EMAIL_HOST_PASSWORD = "qnhp vejy qjmk ipwa"
+EMAIL_HOST_PASSWORD = ""
 
 def test_twilio():
     """Test Twilio SMS functionality"""
